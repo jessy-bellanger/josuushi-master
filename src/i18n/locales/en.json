@@ -1,0 +1,14 @@
+{
+  "nav": {
+    "home": "Home"
+  },
+  "singleWordMode": {
+    "wordToGuess": "Word to guess",
+    "hint": "Hint",
+    "nextWord": "Next word to guess",
+    "inputPlaceholder": "Type your answer here",
+    "validate": "Validate",
+    "softErrorHint": "Hint in case of a close answer",
+    "expectedAnswer": "Expected answer"
+  }
+}

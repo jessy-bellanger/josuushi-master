@@ -1,0 +1,14 @@
+{
+  "nav": {
+    "home": "Accueil"
+  },
+  "singleWordMode": {
+    "wordToGuess": "Ici, le mot à chercher",
+    "hint": "Indice",
+    "nextWord": "Ici, le PROCHAIN mot à chercher",
+    "inputPlaceholder": "Ici, la réponse à trouver",
+    "validate": "Valider",
+    "softErrorHint": "Ici, l'indication en cas d'erreur douce",
+    "expectedAnswer": "Ici, la réponse attendue"
+  }
+}
