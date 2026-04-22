@@ -5,13 +5,15 @@ export interface Reading {
   writing?: string;
 }
 
-export type CounterKey = number | 'nan';
+export type CounterReadings = Partial<Record<CounterNumber, Reading>>;
+
+export type CounterNumber = number | 'nan';
 
 export interface Counter {
   writing: string;
   defaultReading: string;
   hasHint: boolean;
-  particularReadings: Partial<Record<CounterKey, Reading>>;
+  particularReadings: CounterReadings;
 }
 
 export type CountersData = Record<string, Counter>;

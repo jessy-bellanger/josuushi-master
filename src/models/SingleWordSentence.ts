@@ -1,4 +1,4 @@
-import type { Counter, CounterKey } from '@/types/Counter.ts'
+import type { Counter, CounterNumber } from '@/types/Counter.ts'
 import numbers from '@/data/numbers.ts'
 
 
@@ -9,7 +9,7 @@ export class SingleWordSentence {
   public softErrors: string[];
   public softErrorHint: string | undefined;
 
-  public constructor(counterData: Counter, number: CounterKey) {
+  public constructor(counterData: Counter, number: CounterNumber) {
     this.sentence = counterData.particularReadings[number]?.writing ?? (number + counterData.writing);
     this.hint = counterData.writing + ".hint";
     this.correctAnswers = counterData.particularReadings[number]?.pronunciations || [numbers[number]?.reading + counterData.defaultReading];
