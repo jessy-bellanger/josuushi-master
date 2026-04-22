@@ -14,11 +14,11 @@ complète. Le stack technique est conservé : Vue 3 + TypeScript + Pinia + vue-i
 
 ## Audiences & Cas d'usage
 
-| Audience | Besoin principal | Particularité |
-|---|---|---|
-| Apprenant débutant | Mémoriser les lectures de base | A besoin de hints — saisie en kana uniquement (conversion automatique via wanakana) |
-| Apprenant avancé | Maîtriser les irrégularités, fusions phonétiques | Hints disponibles à la demande |
-| Natif japonais | Réviser des compteurs peu courants | UI en japonais |
+| Audience           | Besoin principal                                 | Particularité                                                                       |
+|--------------------|--------------------------------------------------|-------------------------------------------------------------------------------------|
+| Apprenant débutant | Mémoriser les lectures de base                   | A besoin de hints — saisie en kana uniquement (conversion automatique via wanakana) |
+| Apprenant avancé   | Maîtriser les irrégularités, fusions phonétiques | Hints disponibles à la demande                                                      |
+| Natif japonais     | Réviser des compteurs peu courants               | UI en japonais                                                                      |
 
 ---
 
@@ -178,7 +178,41 @@ Input : [___________] → converti live en kana via wanakana
 3. Si match dans `softErrors` → afficher `softErrorHint`, bloquer la progression
 4. Sinon → incorrect, afficher la réponse attendue
 
-### 2. QCM (`MultipleChoiceMode`)
+### 2. Mode rafale (`BurstMode`)
+L'utilisateur voit le combo nombre+compteur actuel et le suivant en aperçu, sans phrase de
+contexte. Il doit lire et valider le maximum de combos en **30 secondes**.
+
+```
+┌─────────────────────────┐
+│  ⏱ 23s            ✓ 7   │
+│                         │
+│          1本            │  ← combo suivant (petit, légèrement transparent, au-dessus)
+│                         │
+│        [ 3匹 ]          │  ← combo actuel (grand)
+│     [___________]       │  ← saisie wanakana
+└─────────────────────────┘
+```
+
+**Animation de transition (style Star Wars crawl) :**
+À chaque avance, le combo suivant glisse vers le bas pour prendre la place du combo actuel.
+L'œil n'a qu'une courte distance à parcourir vers le haut pour lire l'aperçu, puis le suit
+naturellement vers le bas jusqu'à la zone de saisie. Implémenter avec une transition CSS
+`transform: translateY` ou via `<Transition>` Vue avec des classes `slide-down`.
+
+**Règles :**
+- Avance automatique dès que la réponse correspond à `correctAnswers` (pas de bouton Valider)
+- Pas de soft error — une réponse est correcte ou ratée, sans hint
+- Skip : Échap, Tab, ou Entrée avec le champ vide → combo compté comme raté, passage au suivant
+- **Debounce sur Entrée : 200 ms** — empêche qu'un double-tap involontaire valide le combo actuel ET skippe le suivant. À implémenter dans `BurstMode.vue` sur le handler de la touche Entrée.
+- La session se termine quand le timer atteint 0
+- Score final : nombre de bonnes réponses, nombre d'erreurs (erreurs + skips), ratio bonnes/erreurs
+- Le ratio est calculé, pas stocké : `correctCount / (correctCount + errorCount)`
+
+**Type dédié :** `CounterCombo` (pas de `Sentence` — pas de nom ni de phrase)
+
+**État Pinia :** `BurstSession` (séparé de `QuizSession` car le timer est de l'état réactif)
+
+### 3. QCM (`MultipleChoiceMode`)
 4 options proposées, dont 1 correcte. Les distracteurs sont construits selon un ordre de
 priorité défini (voir section Distracteurs).
 
@@ -190,6 +224,38 @@ Options :
   ○ さんぼん     (lecture de 3 + 本 — même nombre, autre compteur)
   ○ みっつ       (lecture de 3 + つ — même nombre, autre compteur)
 ```
+
+---
+
+## Scoring (modes saisie libre, QCM, choix du compteur)
+
+Chaque question produit un `QuestionResult` qui track trois événements indépendants :
+si l'utilisateur a demandé un hint, combien de soft errors il a déclenchées, et s'il a
+finalement répondu correctement.
+
+| Correct  | Hint   | Soft errors  | Score    |
+|----------|--------|--------------|----------|
+| ✓        | non    | 0            | **1**    |
+| ✓        | oui    | 0            | **0.5**  |
+| ✓        | non    | 1            | **0.5**  |
+| ✓        | oui    | 1            | **0.25** |
+| ✓        | —      | ≥ 2          | **0**    |
+| ✗        | —      | —            | **0**    |
+
+```
+function computeScore(result: QuestionResult): number {
+  if (!result.answeredCorrectly || result.softErrorCount > 1) return 0
+  if (result.hintUsed && result.softErrorCount === 1) return 0.25
+  if (result.hintUsed || result.softErrorCount === 1) return 0.5
+  return 1
+}
+```
+
+Le score est stocké directement dans `QuestionResult.score` (calculé à la validation finale).
+Le score total de session = somme des scores / nombre de questions.
+
+> **Mode rafale :** pas de scoring nuancé — chaque combo est correct (1) ou raté (0).
+> Les hints n'existent pas dans ce mode, les soft errors non plus.
 
 ---
 
@@ -210,15 +276,15 @@ Toutes les `correctAnswers` sont stockées en hiragana. La normalisation convert
 
 **Cas limites wanakana à connaître :**
 
-| Input utilisateur | Résultat wanakana.toHiragana() | Attendu | Conforme ? |
-|---|---|---|---|
-| `sanbiki` | `さんびき` | `さんびき` | ✓ |
-| `ippiki` | `いっぴき` | `いっぴき` | ✓ |
-| `too` | `とお` | `とお` | ✓ |
-| `to-` | `とー` | `とお` | ✗ → stocker `とー` comme softError |
-| `juppiki` | `じゅっぴき` | `じゅっぴき` | ✓ |
-| `juupiki` | `じゅうぴき` | — | softError |
-| `nn` | `ん` | — | cas marginal, acceptable |
+| Input utilisateur  | Résultat wanakana.toHiragana()  | Attendu   | Conforme ?                       |
+|--------------------|---------------------------------|-----------|----------------------------------|
+| `sanbiki`          | `さんびき`                          | `さんびき`    | ✓                                |
+| `ippiki`           | `いっぴき`                          | `いっぴき`    | ✓                                |
+| `too`              | `とお`                            | `とお`      | ✓                                |
+| `to-`              | `とー`                            | `とお`      | ✗ → stocker `とー` comme softError |
+| `juppiki`          | `じゅっぴき`                         | `じゅっぴき`   | ✓                                |
+| `juupiki`          | `じゅうぴき`                         | —         | softError                        |
+| `nn`               | `ん`                             | —         | cas marginal, acceptable         |
 
 **Règle** : les variantes d'entrée problématiques (ex: `to-` pour `とお`) sont gérées en les
 ajoutant aux `softErrors` avec un hint approprié, plutôt qu'en complexifiant la normalisation.
@@ -239,6 +305,73 @@ function validate(input: string, sentence: Sentence): AnswerResult {
   return 'incorrect'
 }
 ```
+
+---
+
+## Audio (TTS)
+
+La lecture audio joue la phrase ou le combo en remplaçant le fragment nombre+compteur par
+**なになに**, afin de donner le contexte sans révéler la réponse.
+
+```
+"猫が3匹います" → prononcé : "猫がなになにいます"
+"3匹"           → prononcé : "なになに"
+```
+
+### Déclenchement
+
+Deux modes, contrôlés par `UserSettings.autoPlayAudio` :
+- **Auto** : la phrase/combo est lu automatiquement à l'apparition de chaque question.
+  Disponible dans **tous les modes**, y compris le mode rafale.
+- **À la demande** : l'utilisateur clique une icône 🔊 (`AudioButton.vue`).
+  **Non disponible en mode rafale** — un geste supplémentaire briserait le rythme.
+
+### Disponibilité et UI
+
+Lorsque `isAvailable` est `false` :
+- Le bouton 🔊 est masqué
+- L'option « lecture automatique » dans les paramètres est **désactivée** (grisée) avec une
+  **tooltip** expliquant la cause, ex. : *« Voix japonaise non disponible dans ce navigateur »*
+
+Les deux surfaces (bouton et option) doivent être conditionnées indépendamment par
+`isAvailable`, car l'option paramètre peut être visible même si le bouton est absent (et
+vice-versa selon le mode).
+
+### Implémentation — Web Speech API (MVP)
+
+```typescript
+// composable : useAudio()
+function speak(text: string): void {
+  window.speechSynthesis.cancel()                    // interrompt toute lecture en cours
+  const utterance = new SpeechSynthesisUtterance(text)
+  utterance.lang = 'ja-JP'
+  utterance.rate = 0.9
+  window.speechSynthesis.speak(utterance)
+}
+
+function speakSentence(sentence: Sentence): void {
+  speak(sentence.display.replace(sentence.counterDisplay, 'なになに'))
+}
+
+function speakCombo(combo: CounterCombo): void {
+  speak('なになに')                                   // en mode rafale : non utilisé
+}
+
+// Vérifie la disponibilité avant d'afficher le bouton / l'option auto
+const isAvailable = computed(() =>
+  typeof window !== 'undefined' &&
+  'speechSynthesis' in window &&
+  speechSynthesis.getVoices().some(v => v.lang.startsWith('ja'))
+)
+```
+
+Si `isAvailable` est `false` : bouton 🔊 masqué, option auto-écoute grisée avec tooltip.
+
+### Post-MVP
+
+Remplacer Web Speech API par **Google Cloud TTS** (voix WaveNet ou Neural2) pour une
+qualité homogène sur tous les environnements. Nécessite un backend — cohérent avec les
+évolutions post-MVP déjà prévues.
 
 ---
 
@@ -304,16 +437,16 @@ Commencer par **8 compteurs courants**, bien fournis en noms et patterns, plutô
 viser l'exhaustivité. Critères de sélection : fréquence d'usage, richesse des irrégularités,
 diversité des catégories grammaticales.
 
-| Compteur | Catégorie | Irrégularités notables |
-|---|---|---|
-| つ | Objets généraux (wa-go) | 1〜9 irréguliers sauf 7 (ななつ = なな+つ), 10→とお (つ disparaît) ; 何→いくつ (irrég. totale) |
-| 個 (こ) | Petits objets | 1→いっこ, 6→ろっこ, 8→はっこ, 10→じゅっこ ; 何→なんこ (régulier) |
-| 匹 (ひき) | Petits animaux | 1→いっぴき, 3→さんびき, 6→ろっぴき, 8→はっぴき, 10→じゅっぴき ; 何→なんびき (ひ→び) |
-| 本 (ほん) | Objets longs | 1→いっぽん, 3→さんぼん, 6→ろっぽん, 8→はっぽん, 10→じゅっぽん ; 何→なんぼん (ほ→ぼ) |
-| 枚 (まい) | Objets plats | Entièrement régulier ; 何→なんまい (régulier) |
-| 冊 (さつ) | Livres | 1→いっさつ, 8→はっさつ, 10→じゅっさつ ; 何→なんさつ (régulier) |
-| 台 (だい) | Machines, véhicules | Entièrement régulier ; 何→なんだい (régulier) |
-| 人 (にん/り) | Personnes | 1→ひとり, 2→ふたり (irrég. totales), 4→よにん (よ et non よん) ; 何→なんにん (régulier) |
+| Compteur | Catégorie               | Irrégularités notables                                                           |
+|----------|-------------------------|----------------------------------------------------------------------------------|
+| つ        | Objets généraux (wa-go) | 1〜9 irréguliers sauf 7 (ななつ = なな+つ), 10→とお (つ disparaît) ; 何→いくつ (irrég. totale) |
+| 個 (こ)    | Petits objets           | 1→いっこ, 6→ろっこ, 8→はっこ, 10→じゅっこ ; 何→なんこ (régulier)                                  |
+| 匹 (ひき)   | Petits animaux          | 1→いっぴき, 3→さんびき, 6→ろっぴき, 8→はっぴき, 10→じゅっぴき ; 何→なんびき (ひ→び)                          |
+| 本 (ほん)   | Objets longs            | 1→いっぽん, 3→さんぼん, 6→ろっぽん, 8→はっぽん, 10→じゅっぽん ; 何→なんぼん (ほ→ぼ)                          |
+| 枚 (まい)   | Objets plats            | Entièrement régulier ; 何→なんまい (régulier)                                         |
+| 冊 (さつ)   | Livres                  | 1→いっさつ, 8→はっさつ, 10→じゅっさつ ; 何→なんさつ (régulier)                                     |
+| 台 (だい)   | Machines, véhicules     | Entièrement régulier ; 何→なんだい (régulier)                                         |
+| 人 (にん/り) | Personnes               | 1→ひとり, 2→ふたり (irrég. totales), 4→よにん (よ et non よん) ; 何→なんにん (régulier)           |
 
 ---
 
@@ -321,67 +454,70 @@ diversité des catégories grammaticales.
 
 ### Stack
 
-| Outil | Rôle |
-|---|---|
-| Vue 3 (Composition API) | Framework UI |
-| TypeScript (strict) | Typage |
-| Pinia | State management |
-| Vue Router | Navigation |
-| vue-i18n | i18n (FR / EN / JA) |
-| wanakana | Conversion romaji ↔ kana |
-| Vite | Build |
-| Playwright | Tests E2E |
+| Outil                   | Rôle                     |
+|-------------------------|--------------------------|
+| Vue 3 (Composition API) | Framework UI             |
+| TypeScript (strict)     | Typage                   |
+| Pinia                   | State management         |
+| Vue Router              | Navigation               |
+| vue-i18n                | i18n (FR / EN / JA)      |
+| wanakana                | Conversion romaji ↔ kana |
+| Vite                    | Build                    |
+| Playwright              | Tests E2E                |
 
 ### Structure des fichiers
 
 ```
 src/
-├── data/
-│   ├── counters/
-│   │   ├── index.ts          # exporte CountersData (Record<string, Counter>)
-│   │   ├── tsu.ts            # つ avec nouns et sentencePatterns
-│   │   ├── hiki.ts           # 匹 avec nouns et sentencePatterns
-│   │   └── ...               # un fichier par compteur
-│   └── numbers.ts            # lectures des nombres (0-10000, nan)
-│
-├── types/
-│   ├── Counter.ts            # Counter, Reading, Noun, SentencePattern, CounterNumber
-│   ├── Sentence.ts           # Sentence, AnswerResult
-│   └── Session.ts            # QuizSession, QuizMode, SessionConfig
-│
-├── composables/
-│   ├── useSentenceFactory.ts # generateSentence(), generateRandom()
-│   ├── useAnswerValidator.ts # validate(), normalize()
-│   └── useQuizSession.ts     # orchestration d'une session de quiz
-│
-├── stores/
-│   ├── quiz.ts               # état de la session en cours (Pinia)
-│   └── settings.ts           # préférences utilisateur persistées (localStorage)
-│
-├── views/
-│   ├── HomeView.vue          # sélection des compteurs, du mode, de la plage de nombres
-│   ├── QuizView.vue          # vue conteneur du quiz (switche entre les modes)
-│   └── ResultsView.vue       # résultats de fin de session
 │
 ├── components/
-│   ├── quiz/
-│   │   ├── SentenceDisplay.vue     # affichage de la phrase avec highlight du compteur
-│   │   ├── FreeInputMode.vue       # champ de saisie + wanakana
-│   │   ├── MultipleChoiceMode.vue  # 4 boutons de réponse
-│   │   ├── CounterChoiceMode.vue   # choix du compteur (QCM sur l'écriture)
-│   │   └── HintPanel.vue           # panel de hints (masqué par défaut)
 │   └── ui/
-│       └── ...                     # composants génériques (boutons, badges, etc.)
+│       ├── AudioButton.vue         # icône 🔊, masquée si voix JP indisponible
+│       └── ...                     # composants génériques réutilisables (boutons, badges…)
 │
-├── router/
-│   └── index.ts              # routes : /, /quiz, /results
+├── composables/
+│   ├── useSentenceFactory.ts       # generateSentence(), generateRandom()
+│   ├── useAnswerValidator.ts       # validate(), normalize()
+│   └── useQuizSession.ts           # orchestration d'une session de quiz
+│
+├── data/
+│   ├── counters/
+│   │   ├── index.ts                # exporte CountersData (Record<string, Counter>)
+│   │   ├── tsu.ts                  # つ avec nouns et sentencePatterns
+│   │   ├── hiki.ts                 # 匹 avec nouns et sentencePatterns
+│   │   └── ...                     # un fichier par compteur
+│   └── numbers.ts                  # lectures des nombres (1-10, nan)
 │
 ├── i18n/
 │   ├── index.ts
 │   └── locales/
 │       ├── fr.json
 │       ├── en.json
-│       └── ja.json           # NOUVEAU — interface en japonais
+│       └── ja.json
+│
+├── router/
+│   └── index.ts                    # routes : /, /quiz, /results
+│
+├── stores/
+│   ├── quiz.ts                     # état de la session en cours (Pinia)
+│   └── settings.ts                 # préférences utilisateur persistées (localStorage)
+│
+├── types/
+│   ├── Counter.ts                  # Counter, Reading, Noun, SentencePattern, CounterNumber
+│   ├── Sentence.ts                 # Sentence, AnswerResult
+│   └── Session.ts                  # QuizSession, QuizMode, SessionConfig
+│
+├── views/
+│   ├── HomeView.vue                # sélection des compteurs, du mode, de la plage de nombres
+│   ├── QuizView.vue                # vue conteneur du quiz (switche entre les modes)
+│   ├── ResultsView.vue             # résultats de fin de session
+│   └── quiz/                       # composants propres à QuizView (feature-based)
+│       ├── SentenceDisplay.vue     # affichage de la phrase avec highlight du compteur
+│       ├── FreeInputMode.vue       # champ de saisie + wanakana
+│       ├── MultipleChoiceMode.vue  # 4 boutons de réponse
+│       ├── CounterChoiceMode.vue   # choix du compteur (QCM sur l'écriture)
+│       ├── BurstMode.vue           # mode rafale (timer + avance automatique)
+│       └── HintPanel.vue           # panel de hints (masqué par défaut)
 │
 ├── App.vue
 └── main.ts
@@ -391,7 +527,7 @@ src/
 
 ```typescript
 interface QuizSession {
-  mode: 'free-input' | 'multiple-choice' | 'counter-choice'
+  mode: 'free-input' | 'multiple-choice' | 'counter-choice' | 'burst'
   selectedCounterIds: string[]
   numberRange: [number, number]    // ex: [1, 10]
   includeNan: boolean
@@ -431,14 +567,15 @@ accessible (pour natifs et apprenants avancés).
 ## Périmètre MVP vs. Évolutions
 
 ### MVP (SPA statique)
-- [x] 3 modes de jeu : saisie libre, QCM, choix du compteur
+- [x] 4 modes de jeu : saisie libre, QCM, choix du compteur, rafale (30s)
 - [x] Sélection des compteurs à réviser
 - [x] Sélection de la plage de nombres
 - [x] Génération de phrases par templates contextuels
 - [x] Validation avec softErrors
 - [x] Hints (masqués par défaut)
 - [x] Interface FR / EN / JA
-- [x] Préférences persistées en localStorage (locale, hintsEnabled)
+- [x] Lecture audio TTS (Web Speech API) — auto ou à la demande, avec なになに pour le trou
+- [x] Préférences persistées en localStorage (locale, hintsEnabled, autoPlayAudio)
 - [x] Résultats de fin de session (score, détail par question)
 
 ### Évolutions post-MVP (nécessitent un backend)
