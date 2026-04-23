@@ -28,10 +28,9 @@ export interface SentencePattern {
 export interface Counter {
   id: string
   writing: string
+  roleKey: string
   defaultReading: string
   nouns: Noun[]
   sentencePatterns: SentencePattern[]
   particularReadings: CounterReadings
 }
-
-export type CountersData = Record<string, Counter>

@@ -4,6 +4,7 @@ import type { Counter } from '@/types/Counter'
 const hiki: Counter = {
   id: 'hiki',
   writing: '匹',
+  roleKey: 'counter.role.hiki',
   defaultReading: 'ひき',
   nouns: [
     {
@@ -54,12 +55,12 @@ const hiki: Counter = {
     { template: '池に{noun}が{counter}います' },
   ],
   particularReadings: {
-    1:   { pronunciations: ['いっぴき'],   softErrors: ['いちひき'] },
-    3:   { pronunciations: ['さんびき'],   softErrors: ['さんひき', 'さんぴき'] },
-    6:   { pronunciations: ['ろっぴき'],   softErrors: ['ろくひき', 'ろくぴき'] },
-    8:   { pronunciations: ['はっぴき'],   softErrors: ['はちひき', 'はちぴき'] },
-    10:  { pronunciations: ['じゅっぴき'], softErrors: ['じゅうひき', 'じゅうぴき'] },
-    nan: { pronunciations: ['なんびき'],   softErrors: ['なんひき', 'なんぴき'] },
+    1: { pronunciations: ['いっぴき'], softErrors: ['いちひき'] },
+    3: { pronunciations: ['さんびき'], softErrors: ['さんひき', 'さんぴき'] },
+    6: { pronunciations: ['ろっぴき'], softErrors: ['ろくひき', 'ろくぴき'] },
+    8: { pronunciations: ['はっぴき'], softErrors: ['はちひき', 'はちぴき'] },
+    10: { pronunciations: ['じゅっぴき'], softErrors: ['じゅうひき', 'じゅうぴき'] },
+    nan: { pronunciations: ['なんびき'], softErrors: ['なんひき', 'なんぴき'] },
   },
 }
 

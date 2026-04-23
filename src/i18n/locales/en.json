@@ -1,14 +1,28 @@
 {
-  "nav": {
-    "home": "Home"
+  "counter": {
+    "role": {
+      "tsu":   "General objects",
+      "ko":    "Small objects",
+      "hiki":  "Small animals",
+      "hon":   "Long objects",
+      "mai":   "Flat objects",
+      "satsu": "Books & notebooks",
+      "dai":   "Machines & vehicles",
+      "nin":   "People"
+    }
   },
-  "singleWordMode": {
-    "wordToGuess": "Word to guess",
-    "hint": "Hint",
-    "nextWord": "Next word to guess",
-    "inputPlaceholder": "Type your answer here",
-    "validate": "Validate",
-    "softErrorHint": "Hint in case of a close answer",
-    "expectedAnswer": "Expected answer"
+  "mode": {
+    "label": {
+      "free-input":      "Free input",
+      "multiple-choice": "Reading quiz",
+      "counter-choice":  "Semantic quiz",
+      "burst":           "⚡ Burst — 30s"
+    },
+    "description": {
+      "free-input":      "Type the number + counter reading in kana",
+      "multiple-choice": "Choose the correct reading from the options",
+      "counter-choice":  "Find the right counter (no つ allowed!)",
+      "burst":           "Score as many correct answers as possible!"
+    }
   }
 }

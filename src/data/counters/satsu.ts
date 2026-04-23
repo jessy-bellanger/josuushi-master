@@ -4,6 +4,7 @@ import type { Counter } from '@/types/Counter'
 const satsu: Counter = {
   id: 'satsu',
   writing: '冊',
+  roleKey: 'counter.role.satsu',
   defaultReading: 'さつ',
   nouns: [
     {
@@ -44,8 +45,8 @@ const satsu: Counter = {
     { template: '{noun}を{counter}持っています' },
   ],
   particularReadings: {
-    1:  { pronunciations: ['いっさつ'],   softErrors: ['いちさつ'] },
-    8:  { pronunciations: ['はっさつ'],   softErrors: ['はちさつ'] },
+    1: { pronunciations: ['いっさつ'], softErrors: ['いちさつ'] },
+    8: { pronunciations: ['はっさつ'], softErrors: ['はちさつ'] },
     10: { pronunciations: ['じゅっさつ'], softErrors: ['じゅうさつ'] },
   },
 }

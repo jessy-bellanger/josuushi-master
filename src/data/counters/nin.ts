@@ -6,6 +6,7 @@ import type { Counter } from '@/types/Counter'
 const nin: Counter = {
   id: 'nin',
   writing: '人',
+  roleKey: 'counter.role.nin',
   defaultReading: 'にん',
   nouns: [
     {
@@ -46,9 +47,9 @@ const nin: Counter = {
     { template: '{counter}の{noun}がいます' },
   ],
   particularReadings: {
-    1: { pronunciations: ['ひとり'],             softErrors: ['いちにん'] },
-    2: { pronunciations: ['ふたり'],             softErrors: ['ににん'] },
-    4: { pronunciations: ['よにん'],             softErrors: ['よんにん', 'しにん'] },
+    1: { pronunciations: ['ひとり'], softErrors: ['いちにん'] },
+    2: { pronunciations: ['ふたり'], softErrors: ['ににん'] },
+    4: { pronunciations: ['よにん'], softErrors: ['よんにん', 'しにん'] },
     7: { pronunciations: ['ななにん', 'しちにん'], softErrors: [] },
   },
 }

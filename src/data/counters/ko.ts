@@ -4,6 +4,7 @@ import type { Counter } from '@/types/Counter'
 const ko: Counter = {
   id: 'ko',
   writing: '個',
+  roleKey: 'counter.role.ko',
   defaultReading: 'こ',
   nouns: [
     {
@@ -54,9 +55,9 @@ const ko: Counter = {
     { template: '{noun}を{counter}食べました' },
   ],
   particularReadings: {
-    1:  { pronunciations: ['いっこ'],   softErrors: ['いちこ'] },
-    6:  { pronunciations: ['ろっこ'],   softErrors: ['ろくこ'] },
-    8:  { pronunciations: ['はっこ'],   softErrors: ['はちこ'] },
+    1: { pronunciations: ['いっこ'], softErrors: ['いちこ'] },
+    6: { pronunciations: ['ろっこ'], softErrors: ['ろくこ'] },
+    8: { pronunciations: ['はっこ'], softErrors: ['はちこ'] },
     10: { pronunciations: ['じゅっこ'], softErrors: ['じゅうこ'] },
   },
 }

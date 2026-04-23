@@ -36,7 +36,7 @@ const correctId = 'hiki'
         @click="selected = opt.id"
       >
         <span class="counter-writing">{{ opt.writing }}</span>
-        <span class="counter-label">{{ opt.label }}</span>
+        <span class="counter-role">{{ opt.label }}</span>
       </button>
     </div>
 
@@ -112,7 +112,7 @@ const correctId = 'hiki'
   color: white;
 }
 
-.counter-btn--selected .counter-label {
+.counter-btn--selected .counter-role {
   color: rgba(255, 255, 255, 0.75);
 }
 
@@ -135,7 +135,7 @@ const correctId = 'hiki'
 .counter-btn--correct .counter-writing { color: var(--correct); }
 .counter-btn--wrong  .counter-writing { color: var(--error);   }
 
-.counter-label {
+.counter-role {
   font-size: 0.68rem;
   color: var(--text-muted);
 }

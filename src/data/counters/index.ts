@@ -1,4 +1,4 @@
-import type { CountersData } from '@/types/Counter'
+import type { Counter } from '@/types/Counter'
 import tsu from './tsu'
 import ko from './ko'
 import hiki from './hiki'
@@ -8,7 +8,7 @@ import satsu from './satsu'
 import dai from './dai'
 import nin from './nin'
 
-const counters: CountersData = {
+const counters: Record<string, Counter> = {
   tsu,
   ko,
   hiki,

@@ -4,6 +4,7 @@ import type { Counter } from '@/types/Counter'
 const hon: Counter = {
   id: 'hon',
   writing: '本',
+  roleKey: 'counter.role.hon',
   defaultReading: 'ほん',
   nouns: [
     {
@@ -49,12 +50,12 @@ const hon: Counter = {
     { template: '机の上に{noun}が{counter}あります' },
   ],
   particularReadings: {
-    1:   { pronunciations: ['いっぽん'],   softErrors: ['いちほん'] },
-    3:   { pronunciations: ['さんぼん'],   softErrors: ['さんほん'] },
-    6:   { pronunciations: ['ろっぽん'],   softErrors: ['ろくほん', 'ろくぽん'] },
-    8:   { pronunciations: ['はっぽん'],   softErrors: ['はちほん', 'はちぽん'] },
-    10:  { pronunciations: ['じゅっぽん'], softErrors: ['じゅうほん', 'じゅうぽん'] },
-    nan: { pronunciations: ['なんぼん'],   softErrors: ['なんほん'] },
+    1: { pronunciations: ['いっぽん'], softErrors: ['いちほん'] },
+    3: { pronunciations: ['さんぼん'], softErrors: ['さんほん'] },
+    6: { pronunciations: ['ろっぽん'], softErrors: ['ろくほん', 'ろくぽん'] },
+    8: { pronunciations: ['はっぽん'], softErrors: ['はちほん', 'はちぽん'] },
+    10: { pronunciations: ['じゅっぽん'], softErrors: ['じゅうほん', 'じゅうぽん'] },
+    nan: { pronunciations: ['なんぼん'], softErrors: ['なんほん'] },
   },
 }
 

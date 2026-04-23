@@ -5,6 +5,7 @@ import type { Counter } from '@/types/Counter'
 const mai: Counter = {
   id: 'mai',
   writing: '枚',
+  roleKey: 'counter.role.mai',
   defaultReading: 'まい',
   nouns: [
     {

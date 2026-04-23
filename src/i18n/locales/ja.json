@@ -1,0 +1,28 @@
+{
+  "counter": {
+    "role": {
+      "tsu":   "もの全般",
+      "ko":    "小物",
+      "hiki":  "小動物",
+      "hon":   "細長いもの",
+      "mai":   "平らなもの",
+      "satsu": "本・雑誌",
+      "dai":   "機械・乗り物",
+      "nin":   "人"
+    }
+  },
+  "mode": {
+    "label": {
+      "free-input":      "自由入力",
+      "multiple-choice": "読み方クイズ",
+      "counter-choice":  "意味クイズ",
+      "burst":           "⚡ 連打 — 30秒"
+    },
+    "description": {
+      "free-input":      "数字＋助数詞の読み方をひらがなで入力しよう",
+      "multiple-choice": "正しい読み方を選んでね",
+      "counter-choice":  "正しい助数詞を選んでね（つは使えない！）",
+      "burst":           "30秒でどれだけ正解できるかな？"
+    }
+  }
+}

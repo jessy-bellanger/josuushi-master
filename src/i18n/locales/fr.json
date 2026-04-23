@@ -1,14 +1,28 @@
 {
-  "nav": {
-    "home": "Accueil"
+  "counter": {
+    "role": {
+      "tsu":   "Objets généraux",
+      "ko":    "Petits objets",
+      "hiki":  "Petits animaux",
+      "hon":   "Objets longs",
+      "mai":   "Objets plats",
+      "satsu": "Livres & cahiers",
+      "dai":   "Machines & véhicules",
+      "nin":   "Personnes"
+    }
   },
-  "singleWordMode": {
-    "wordToGuess": "Ici, le mot à chercher",
-    "hint": "Indice",
-    "nextWord": "Ici, le PROCHAIN mot à chercher",
-    "inputPlaceholder": "Ici, la réponse à trouver",
-    "validate": "Valider",
-    "softErrorHint": "Ici, l'indication en cas d'erreur douce",
-    "expectedAnswer": "Ici, la réponse attendue"
+  "mode": {
+    "label": {
+      "free-input":      "Saisie libre",
+      "multiple-choice": "QCM de lecture",
+      "counter-choice":  "QCM sémantique",
+      "burst":           "⚡ Rafale — 30s"
+    },
+    "description": {
+      "free-input":      "Tapez la lecture du nombre + compteur en kana",
+      "multiple-choice": "Choisissez parmi des propositions de lecture",
+      "counter-choice":  "Trouvez le bon compteur (pas le droit à つ !)",
+      "burst":           "Le plus de bonnes réponses possible !"
+    }
   }
 }

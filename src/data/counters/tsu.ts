@@ -5,6 +5,7 @@ import type { Counter } from '@/types/Counter'
 const tsu: Counter = {
   id: 'tsu',
   writing: 'つ',
+  roleKey: 'counter.role.tsu',
   defaultReading: 'つ',
   nouns: [
     {

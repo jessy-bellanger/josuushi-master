@@ -1,73 +1,61 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import RangeSlider from '@/components/ui/RangeSlider.vue'
+import counters from '@/data/counters'
+import modes from '@/data/modes.ts'
+import type { Counter } from '@/types/Counter.ts'
 
 const router = useRouter()
 
-const counters = [
-  { id: 'tsu', writing: 'つ', label: 'Objets généraux' },
-  { id: 'ko', writing: '個', label: 'Petits objets' },
-  { id: 'hiki', writing: '匹', label: 'Petits animaux' },
-  { id: 'hon', writing: '本', label: 'Objets longs' },
-  { id: 'mai', writing: '枚', label: 'Objets plats' },
-  { id: 'satsu', writing: '冊', label: 'Livres' },
-  { id: 'dai', writing: '台', label: 'Machines' },
-  { id: 'nin', writing: '人', label: 'Personnes' },
-]
+const counterIds = Object.keys(counters)
+const selectedCounters = ref(['hiki', 'hon'])
+const allSelected = computed(() => selectedCounters.value.length === counterIds.length)
 
-const modes = [
-  {
-    id: 'free-input',
-    label: 'Saisie libre',
-    description: 'Tapez la lecture du nombre + compteur en kana',
-  },
-  {
-    id: 'multiple-choice',
-    label: 'QCM de lecture',
-    description: 'Choisissez parmi 4 propositions de lecture',
-  },
-  {
-    id: 'counter-choice',
-    label: 'QCM sémantique',
-    description: 'Trouvez le bon compteur (pas le droit à つ !)',
-  },
-  { id: 'burst', label: '⚡ Rafale  — 30s', description: 'Le plus de bonnes réponses possible !' },
-]
-
-const selectedCounters = ref<string[]>(['hiki', 'hon'])
+function toggleAll() {
+  selectedCounters.value = allSelected.value ? [] : [...counterIds]
+}
 const selectedMode = ref('free-input')
 const rangeMin = ref(1)
 const rangeMax = ref(10)
 const includeNan = ref(false)
 
-function toggleCounter(id: string) {
-  const i = selectedCounters.value.indexOf(id)
-  if (i >= 0) selectedCounters.value.splice(i, 1)
-  else selectedCounters.value.push(id)
+function getCounterWriting(counter: Counter) {
+  if (counter.writing !== counter.defaultReading) {
+    return `${counter.writing} · ${counter.defaultReading}`
+  }
+
+  return counter.writing
 }
 </script>
 
 <template>
   <div class="home">
     <section class="section">
-      <h2 class="section-title">Compteurs</h2>
+      <div class="section-header">
+        <h2 class="section-title">Compteurs</h2>
+        <button class="btn-toggle-all" @click="toggleAll">
+          {{ allSelected ? 'Tout désactiver' : 'Tout activer' }}
+        </button>
+      </div>
       <div class="counter-grid">
-        <button
+        <label
           v-for="c in counters"
           :key="c.id"
           class="counter-card"
           :class="{ selected: selectedCounters.includes(c.id) }"
-          @click="toggleCounter(c.id)"
         >
-          <span class="counter-writing">{{ c.writing }}</span>
-          <span class="counter-label">{{ c.label }}</span>
-        </button>
+          <input type="checkbox" v-model="selectedCounters" :value="c.id" class="sr-only" />
+          <span class="counter-writing">{{ getCounterWriting(c) }}</span>
+          <span class="counter-role">{{ $t(c.roleKey) }}</span>
+        </label>
       </div>
     </section>
 
     <section class="section">
-      <h2 class="section-title">Mode de jeu</h2>
+      <div class="section-header">
+        <h2 class="section-title">Mode de jeu</h2>
+      </div>
       <div class="mode-grid">
         <button
           v-for="m in modes"
@@ -76,14 +64,16 @@ function toggleCounter(id: string) {
           :class="{ selected: selectedMode === m.id }"
           @click="selectedMode = m.id"
         >
-          <span class="mode-label">{{ m.label }}</span>
-          <span class="mode-desc">{{ m.description }}</span>
+          <span class="mode-label">{{ $t(m.labelKey) }}</span>
+          <span class="mode-desc">{{ $t(m.descriptionKey) }}</span>
         </button>
       </div>
     </section>
 
     <section class="section">
-      <h2 class="section-title">Plage de nombres</h2>
+      <div class="section-header">
+        <h2 class="section-title">Plage de nombres</h2>
+      </div>
       <div class="range-row">
         <RangeSlider v-model:model-min="rangeMin" v-model:model-max="rangeMax" />
         <label class="nan-toggle">
@@ -109,38 +99,69 @@ function toggleCounter(id: string) {
 .home {
   max-width: 680px;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding: var(--spacer-2xl);
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: var(--spacer-2xl);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacer-xs);
 }
 
 .section-title {
-  font-size: 0.78rem;
-  font-weight: 700;
+  margin-bottom: 0;
+}
+
+.btn-toggle-all {
+  font-size: var(--text-sm);
+  color: var(--primary);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.section-title {
+  font-size: var(--text-lg);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
   color: var(--text-muted);
-  margin-bottom: 0.75rem;
+}
+
+.sr-only {
+  position: absolute;
+  clip-path: inset(50%);
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 /* --- Compteurs --- */
 .counter-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 0.6rem;
+  gap: var(--spacer-xs);
 }
 
 .counter-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.9rem 0.5rem;
+  justify-content: center;
+  gap: var(--spacer-xs);
+  padding: var(--spacer-sm) var(--spacer-xs);
   border: 2px solid var(--border);
   border-radius: var(--radius);
   background: var(--bg);
   transition: all 0.15s;
+  cursor: pointer;
 }
 
 .counter-card:hover {
@@ -158,18 +179,20 @@ function toggleCounter(id: string) {
   color: white;
 }
 
-.counter-card.selected .counter-label {
+.counter-card.selected .counter-role {
   color: rgba(255, 255, 255, 0.75);
 }
 
 .counter-writing {
-  font-size: 2rem;
+  font-family: "Klee One", sans-serif;
+  font-weight: bold;
+  font-size: var(--text-2xl);
   line-height: 1;
   color: var(--primary);
 }
 
-.counter-label {
-  font-size: 0.68rem;
+.counter-role {
+  font-size: var(--text-sm);
   color: var(--text-muted);
   text-align: center;
 }
@@ -178,14 +201,14 @@ function toggleCounter(id: string) {
 .mode-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.6rem;
+  gap: var(--spacer-xs);
 }
 
 .mode-card {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  padding: 0.9rem 1rem;
+  gap: var(--spacer-xs);
+  padding: var(--spacer-sm) var(--spacer-base);
   border: 2px solid var(--border);
   border-radius: var(--radius);
   background: var(--bg);
@@ -211,10 +234,10 @@ function toggleCounter(id: string) {
 
 .mode-label {
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: var(--text-base);
 }
 .mode-desc {
-  font-size: 0.75rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
 }
 
@@ -222,23 +245,23 @@ function toggleCounter(id: string) {
 .range-row {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: var(--spacer-xs);
   flex-wrap: wrap;
 }
 
 .range-row label {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
+  gap: var(--spacer-xs);
+  font-size: var(--text-sm);
 }
 
 .range-row input[type='number'] {
   width: 3.5rem;
-  padding: 0.3rem 0.4rem;
+  padding: var(--spacer-2xs) var(--spacer-xs);
   border: 1px solid var(--border);
   border-radius: 0.375rem;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   text-align: center;
 }
 
@@ -290,12 +313,12 @@ function toggleCounter(id: string) {
 }
 
 .btn-start {
-  padding: 0.75rem 2.5rem;
+  padding: var(--spacer-base);
   background: var(--primary);
   color: white;
   border: none;
   border-radius: var(--radius);
-  font-size: 1rem;
+  font-size: var(--text-base);
   font-weight: 600;
   transition: background 0.15s;
 }
